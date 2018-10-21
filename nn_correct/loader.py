@@ -46,7 +46,7 @@ class FIOLoader(DataLoader):
 
         if len(batch) > 0:
             if self.sort_batch:
-                batch = sorted(batch, key=lambda x: len(x[1]))
+                batch = sorted(batch, key=lambda x: len(x[1]), reverse=True)
             yield batch
 
     @classmethod
