@@ -3,11 +3,13 @@ import datetime
 
 import os
 
+import numpy as np
 import torch
 
 import torch.optim as optim
 from torchlite.torch.learner import Learner
 from torchlite.torch.learner.cores import ClassifierCore
+from torchlite.torch.metrics import Metric
 from torchlite.torch.train_callbacks import TensorboardVisualizerCallback, ModelSaverCallback, ReduceLROnPlateau
 
 from nn_correct.loader import FIOLoader
@@ -25,7 +27,7 @@ parser.add_argument('--restore-model', dest='restore_model',
 parser.add_argument('--epoch', type=int, default=100)
 parser.add_argument('--save-every', type=int, default=10)
 parser.add_argument('--batch-size', type=int, default=100)
-parser.add_argument('--cuda', type=bool, default=False)
+parser.add_argument('--cuda', type=int, default=0)
 parser.add_argument('--parallel', type=int, default=0)
 parser.add_argument('--patience', type=int, default=10)
 parser.add_argument('--run', default='none', help='name of current run for tensorboard')
@@ -52,8 +54,7 @@ model = CorrectorModel(
 if args.restore_model:
     ModelSaverCallback.restore_model_from_file(model, args.restore_model, load_with_cpu=(not args.cuda))
 
-optimizer = optim.Adam(filter(lambda x: x.requires_grad, model.parameters()), lr=args.lr,
-                       weight_decay=args.weight_decay)
+optimizer = optim.Adam(filter(lambda x: x.requires_grad, model.parameters()), lr=args.lr)
 
 run_name = args.run + '-' + datetime.datetime.now().strftime("%Y-%m-%d-%H-%M")
 
@@ -61,8 +62,23 @@ tb_dir = os.path.join('./data/tensorboard', run_name)
 if not os.path.exists(tb_dir):
     os.mkdir(tb_dir)
 
-metrics = [
 
+class AccuracyMetric(Metric):
+    @property
+    def get_name(self):
+        return "accuracy"
+
+    def __call__(self, y_pred, y_true):
+        y_true = y_true.cpu().numpy()
+        y_pred = torch.argmax(y_pred, dim=1).cpu().numpy()
+
+        errors = np.sum(np.abs(y_pred - y_true), axis=1)
+
+        return np.sum(errors > 0) / errors.shape[0]
+
+
+metrics = [
+    AccuracyMetric()
 ]
 
 

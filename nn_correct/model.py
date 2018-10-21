@@ -36,17 +36,19 @@ class CorrectorModel(nn.Module):
         self.embedding_size = embedding_size
 
         convolutions = [
-            nn.Conv1d(self.word_emb_sizes, self.conv_sizes[0], self.window),
+            nn.Conv1d(self.embedding_size, self.conv_sizes[0], self.window),
             activation(),
             nn.Dropout(self.dropout)
         ]
 
         for from_size, to_size in pairwise(self.conv_sizes):
             convolutions += [
-                torch.nn.Conv1d(from_size, to_size, self.window),
+                torch.nn.Conv1d(from_size, to_size, self.window, padding=self.window-1),
                 activation(),
                 torch.nn.Dropout(self.dropout)
             ]
+
+        self.convolution = nn.Sequential(*convolutions)
 
         self.final_layer = nn.Linear(self.conv_sizes[-1], self.out_size)
         self.final_activation = nn.LogSoftmax(dim=2)
@@ -56,6 +58,7 @@ class CorrectorModel(nn.Module):
         conv_names = self.convolution(names)
         conv_names = conv_names.transpose(1, 2)
 
-        diffs = self.final_activation(self.final_layer(conv_names))
+        diffs = self.final_activation(self.final_layer(conv_names)).transpose(1, 2)
+
         return diffs
 

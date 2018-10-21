@@ -93,11 +93,16 @@ class FIOLoader(DataLoader):
         name_mtx, lengths = self.vectorizer.vect_batch(names)
         diff_mtx, _ = self.diff_vectorizer.vect_batch(diffs, foo=self.diff_vectorizer.label)
 
+        print(diff_mtx.shape)
+
         return name_mtx, lengths, diff_mtx
 
     def __iter__(self):
         for batch in self.read_batch():
             yield self.vectorize(batch)
+
+    def __len__(self):
+        return 1_000_000
 
 
 if __name__ == '__main__':
