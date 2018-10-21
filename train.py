@@ -45,10 +45,12 @@ loss = torch.nn.NLLLoss()
 
 model = CorrectorModel(
     embedding_size=train_loader.vectorizer.length,
-    conv_sizes=[50, 50],
+    conv_sizes=[200, 200, 200],
     out_size=train_loader.diff_vectorizer.length,
     dropout=0.1,
-    window=3
+    window=3,
+    lstm_layers=2,
+    lstm_size=100
 )
 
 if args.restore_model:
@@ -72,10 +74,9 @@ class AccuracyMetric(Metric):
         y_true = y_true.cpu().numpy()
         y_pred = torch.argmax(y_pred, dim=1).cpu().numpy()
 
+        y_pred[y_true == -100] = -100
         errors = np.sum(np.abs(y_pred - y_true), axis=1)
-
-        return np.sum(errors > 0) / errors.shape[0]
-
+        return np.sum(errors == 0) / errors.shape[0]
 
 metrics = [
     AccuracyMetric()

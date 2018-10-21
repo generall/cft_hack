@@ -27,7 +27,7 @@ class FIOLoader(DataLoader):
 
     def read_batch(self):
         batch = []
-        with open(self.file) as csvfile:
+        with open(self.file, encoding='utf-8') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
 
@@ -93,8 +93,6 @@ class FIOLoader(DataLoader):
         name_mtx, lengths = self.vectorizer.vect_batch(names)
         diff_mtx, _ = self.diff_vectorizer.vect_batch(diffs, foo=self.diff_vectorizer.label)
 
-        print(diff_mtx.shape)
-
         return name_mtx, lengths, diff_mtx
 
     def __iter__(self):
@@ -110,6 +108,8 @@ if __name__ == '__main__':
     reader = loader.read_batch()
 
     batch1 = next(reader)
+
+    [print(fio) for fio in batch1]
 
     name_mtx, lengths, diff_mtx = loader.vectorize(batch1)
 
