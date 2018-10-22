@@ -45,12 +45,12 @@ loss = torch.nn.NLLLoss()
 
 model = CorrectorModel(
     embedding_size=train_loader.vectorizer.length,
-    conv_sizes=[200, 200, 200],
+    conv_sizes=[300, 200, 200, 200],
     out_size=train_loader.diff_vectorizer.length,
     dropout=0.1,
     window=3,
     lstm_layers=2,
-    lstm_size=100
+    lstm_size=200
 )
 
 if args.restore_model:
@@ -78,6 +78,7 @@ class AccuracyMetric(Metric):
         errors = np.sum(np.abs(y_pred - y_true), axis=1)
         return np.sum(errors == 0) / errors.shape[0]
 
+
 metrics = [
     AccuracyMetric()
 ]
@@ -94,9 +95,12 @@ class MyReduceLROnPlateau(ReduceLROnPlateau):
                 self.lr_sch.step(epoch_loss, epoch)
 
 
+models_path = os.path.join('./data/models', run_name)
+os.mkdir(models_path)
+
 callbacks = [
     TensorboardVisualizerCallback(tb_dir),
-    ModelSaverCallback('./data/models', epochs=args.epoch, every_n_epoch=args.save_every),
+    ModelSaverCallback(models_path, epochs=args.epoch, every_n_epoch=args.save_every),
     MyReduceLROnPlateau(optimizer, loss_step="valid", factor=0.5, verbose=True, patience=args.patience)
 ]
 

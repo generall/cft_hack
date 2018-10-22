@@ -38,7 +38,7 @@ class CorrectorModel(nn.Module):
         self.embedding_size = embedding_size
 
         convolutions = [
-            nn.Conv1d(self.embedding_size, self.conv_sizes[0], self.window, padding=1),
+            nn.Conv1d(self.embedding_size, self.conv_sizes[0], 5, padding=2),
             activation(),
             nn.Dropout(self.dropout)
         ]
